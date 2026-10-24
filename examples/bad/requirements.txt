@@ -1,0 +1,3 @@
+-r loop.txt
+-r missing.txt
+-r https://example.invalid/remote.txt

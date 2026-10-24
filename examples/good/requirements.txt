@@ -1,0 +1,4 @@
+# This tree can be inventoried without installing its example packages.
+-r common.txt
+-c constraints.txt
+requests>=2.32
