@@ -55,7 +55,8 @@ def audit(
             findings.append({"code": code, "severity": severity, **location})
 
     try:
-        bundle = Path(root).resolve(strict=True)
+        declared_root = Path(os.path.abspath(root))
+        bundle = declared_root.resolve(strict=True)
         if not bundle.is_dir():
             raise OSError
     except (OSError, ValueError, RuntimeError):
@@ -68,8 +69,14 @@ def audit(
         try:
             relative = absolute.relative_to(bundle)
         except ValueError:
-            add("outside-root", **location)
-            return None
+            try:
+                # Only the root explicitly supplied by the caller is trusted as
+                # an alias. Links below it still undergo the same lstat checks.
+                relative = absolute.relative_to(declared_root)
+            except ValueError:
+                add("outside-root", **location)
+                return None
+        absolute = bundle / relative
         cursor = bundle
         try:
             for part in relative.parts:

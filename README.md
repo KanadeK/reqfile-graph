@@ -70,9 +70,9 @@ are then resolved relative to the file containing them, not the current director
 reqfile-graph bundle/requirements.txt bundle/dev.txt --root bundle --format json
 ```
 
-`--root` is required and must identify a real, existing bundle directory. Use its
-canonical path when your working tree is reached through a directory alias.
-Reported filenames are relative to this canonical root.
+`--root` is required and must identify an existing bundle directory. The declared
+root itself may use a platform directory alias; it is mapped to its canonical
+location before checking paths below it. Reported filenames use this canonical root.
 
 For a visual file graph:
 

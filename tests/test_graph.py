@@ -101,6 +101,26 @@ class GraphTests(unittest.TestCase):
         self.assertTrue(report["ok"], report)
         self.assertEqual(report["edges"][1]["target"], "pins.txt")
 
+    def test_declared_root_alias_maps_to_canonical_root_before_link_checks(self):
+        self.write("r.txt", "-r base.txt\n")
+        self.write("base.txt", "lib==1\n")
+        alias = self.root.parent / "platform-root-alias"
+        actual_resolve = Path.resolve
+
+        def resolve(path, *args, **kwargs):
+            if path == alias:
+                return actual_resolve(self.root, *args, **kwargs)
+            return actual_resolve(path, *args, **kwargs)
+
+        # Reproduce /var -> /private/var or Windows short-name root resolution
+        # without requiring symlink creation privileges on the local host.
+        with mock.patch.object(Path, "resolve", resolve):
+            result = audit([alias / "r.txt"], root=alias)
+            escaped = audit([alias / "../outside.txt"], root=alias)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(len(result["files"]), 2)
+        self.assertIn("outside-root", self.codes(escaped))
+
     def test_cycle_is_reported_without_infinite_recursion(self):
         main = self.write("a.txt", "-c b.txt\n")
         self.write("b.txt", "-r a.txt\n")
